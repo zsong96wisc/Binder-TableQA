@@ -97,7 +97,6 @@ class NeuralDB(object):
 
         # Records conn
         self.db = records.Database('sqlite:///{}'.format(self.db_path))
-        #self.records_conn = self.db.get_connection()
         self.records_conn = self.db
 
     def __str__(self):
