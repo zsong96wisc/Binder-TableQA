@@ -1,7 +1,3 @@
-"""
-Multiprocess executing binder programs.
-"""
-
 import json
 import argparse
 import platform, multiprocessing
@@ -10,23 +6,13 @@ import time
 
 from nsql.nsql_exec import Executor, NeuralDB
 from utils.normalizer import post_process_sql
-from utils.utils import load_data_split, majority_vote
+from utils.utils import majority_vote
 from utils.evaluator import Evaluator
-from datasets import Dataset
 
 ROOT_DIR = os.path.join(os.path.dirname(__file__), "../")
 
 
-def worker_execute(
-        pid,
-        args,
-        dataset,
-        nsql_dict,
-        keys
-):
-    """
-    A worker process for execution.
-    """
+def worker_execute(pid, args, dataset, nsql_dict, keys):
     result_dict = dict()
     n_total_samples, n_correct_samples = 0, 0
     for eid, data_item in enumerate(dataset):
@@ -41,7 +27,7 @@ def worker_execute(
         table = data_item['table']
         title = table['page_title']
         executor = Executor(args, keys)
-        # Execute
+
         exec_answer_list = []
         nsql_exec_answer_dict = dict()
         for idx, (nsql, logprob) in enumerate(nsql_dict[eid]['nsqls']):
@@ -68,11 +54,11 @@ def worker_execute(
                 print(f"Process#{pid}: Execution error {e}")
                 exec_answer = '<error>'
                 exec_answer_list.append(exec_answer)
-            # Store tmp execution answers
+
             if nsql_dict[eid].get('exec_answers', None) is None:
                 nsql_dict[eid]['exec_answers'] = []
             nsql_dict[eid]['exec_answers'].append(exec_answer)
-        # Majority vote to determine the final prediction answer
+
         pred_answer, pred_answer_nsqls = majority_vote(
             nsqls=nsql_dict[eid]['nsqls'],
             pred_answer_list=exec_answer_list,
@@ -82,7 +68,7 @@ def worker_execute(
             answer_biased=args.answer_biased,
             answer_biased_weight=args.answer_biased_weight
         )
-        # Evaluate
+        
         result_dict[eid]['pred_answer'] = pred_answer
         result_dict[eid]['nsql'] = pred_answer_nsqls
         gold_answer = data_item['answer_text']
@@ -101,72 +87,29 @@ def worker_execute(
             print(f'Process#{pid}: Wrong.')
         print(f'Process#{pid}: Accuracy: {n_correct_samples}/{n_total_samples}')
 
-        # Save tmp execution answers
     with open(os.path.join(args.save_dir, f"{pid}.json"), 'w') as f:
         json.dump(nsql_dict, f, indent=4)
 
     return result_dict
 
 
-def main():
-    # Build paths
-    args.api_keys_file = os.path.join(ROOT_DIR, args.api_keys_file)
-    args.save_dir = os.path.join(ROOT_DIR, args.save_dir)
-    os.makedirs(args.save_dir, exist_ok=True)
-
-    # Load dataset
-    start_time = time.time()
-    dataset = load_data_split(args.dataset, args.dataset_split)
-    # For TabFact test split, we load the small test set (about 2k examples) to test,
-    # since it is expensive to test on full set
-    if args.dataset == "tab_fact" and args.dataset_split == "test":
-        with open(os.path.join(ROOT_DIR, "utils", "tab_fact", "small_test_id.json"), "r") as f:
-            small_test_ids_for_iter = json.load(f)
-        dataset = [data_item for data_item in dataset if data_item['table']['id'] in small_test_ids_for_iter]
-    
-
-
-    subset_data = []
-    count = 0
-    for row in dataset:
-        subset_data.append(dict(row))
-        count += 1
-        if count == 100:
-            break
-
-    transformed_data = {key: [] for key in subset_data[0].keys()}
-
-    # Populate the lists
-    for row in subset_data:
-        for key in row:
-            transformed_data[key].append(row[key])
-    dataset = Dataset.from_dict(transformed_data)
-
-    # Load openai keys
-    with open(args.api_keys_file, 'r') as f:
-        keys = [line.strip() for line in f.readlines()]
-
-    # Load programs and process as a unified format
-    with open(os.path.join(args.save_dir, args.input_program_file), 'r') as f:
-        data = json.load(f)
-    nsql_dict = dict()
-    # print(data)
+def process_program_data(data):
+    nsql_dict = {}
     for eid, data_dict in data.items():
         if data[eid]['generations']:
             nsqls = data[eid]['generations']
-            # print("XXX [A]")
-            # print(nsqls)
         else:
             nsqls = [['<dummy program>', 0.]]
-            # print("XXX [B]")
         nsql_dict[eid] = {'nsqls': nsqls}
+    return nsql_dict
 
-    # Split by processes
-    nsql_dict_group = [dict() for _ in range(args.n_processes)]
+def split_data_by_processes(nsql_dict, n_processes):
+    nsql_dict_group = [dict() for _ in range(n_processes)]
     for idx, eid in enumerate(nsql_dict.keys()):
-        nsql_dict_group[idx % args.n_processes][eid] = nsql_dict[eid]
+        nsql_dict_group[idx % n_processes][eid] = nsql_dict[eid]
+    return nsql_dict_group
 
-    # Execute programs
+def execute_programs_multiprocessing(args, dataset, nsql_dict_group, keys):
     result_dict = dict()
     worker_results = []
     pool = multiprocessing.Pool(processes=args.n_processes)
@@ -177,14 +120,16 @@ def main():
             dataset,
             nsql_dict_group[pid],
             keys
-        )))
+        ))
 
-    # Merge worker results
     for r in worker_results:
         worker_result_dict = r.get()
         result_dict.update(worker_result_dict)
     pool.close()
     pool.join()
+    return result_dict
+
+def evaluate_results(result_dict, args):
     n_correct_samples = 0
     for eid, item in result_dict.items():
         pred_answer, gold_answer = item['pred_answer'], item['gold_answer']
@@ -194,22 +139,10 @@ def main():
             dataset=args.dataset,
             question=result_dict[eid]['question']
         )
-    print(f'Overall Accuracy: {n_correct_samples}/{len(result_dict)}')
-
-    # Save program executions
-    with open(os.path.join(args.save_dir, args.output_program_execution_file), 'w') as f:
-        json.dump(result_dict, f)
-
-    print(f'Done. Elapsed time: {time.time() - start_time}')
-
+    return n_correct_samples
 
 if __name__ == '__main__':
-    if platform.system() == "Darwin":
-        multiprocessing.set_start_method('spawn')
-
     parser = argparse.ArgumentParser()
-
-    # File path or name
     parser.add_argument('--dataset', type=str, default='wikitq',
                         choices=['wikitq', 'tab_fact'])
     parser.add_argument('--dataset_split', type=str, default='test', choices=['train', 'validation', 'test'])
@@ -220,15 +153,8 @@ if __name__ == '__main__':
                         default='binder_program_wikitq_test_chatgpt.json')
     parser.add_argument('--output_program_execution_file', type=str,
                         default='binder_program_wikitq_test_chatgpt_exec.json')
-
-    # Multiprocess options
     parser.add_argument('--n_processes', type=str, default=1)
-
-    # Execution options
     parser.add_argument('--engine', type=str, default="gpt-3.5-turbo")
-    # parser.add_argument('--engine', type=str, default="gpt-3.5-turbo-instruct")
-    # parser.add_argument('--engine', type=str, default="gpt-3.5-turbo-16k")
-    # parser.add_argument('--engine', type=str, default="gpt-3.5-turbo-16k-0613")
     parser.add_argument('--use_majority_vote', action='store_false',
                         help='Whether use majority vote to determine the prediction answer.')
     parser.add_argument('--allow_none_and_empty_answer', action='store_true',
@@ -246,12 +172,40 @@ if __name__ == '__main__':
     parser.add_argument('--process_program_with_fuzzy_match_on_db', action='store_false',
                         help='Whether use fuzzy match with db and program to improve on program.')
 
-    # Debugging options
-    parser.add_argument('--verbose', action='store_true')
-
     args = parser.parse_args()
-    print("Args info:")
-    for k in args.__dict__:
-        print(k + ": " + str(args.__dict__[k]))
 
-    main()
+    args.api_keys_file = os.path.join(ROOT_DIR, args.api_keys_file)
+    args.save_dir = os.path.join(ROOT_DIR, args.save_dir)
+    os.makedirs(args.save_dir, exist_ok=True)
+
+    dataset = load_data_split(args.dataset, args.dataset_split)
+
+    # we load a small subset of data(say 100) to test since it is expensive and time-consuming to use openai api
+    subset_data = []
+    count = 0
+    for row in dataset:
+        subset_data.append(dict(row))
+        count += 1
+        if count == 100:
+            break
+
+    transformed_data = {key: [] for key in subset_data[0].keys()}
+
+    for row in subset_data:
+        for key in row:
+            transformed_data[key].append(row[key])
+    dataset = Dataset.from_dict(transformed_data)
+
+    with open(args.api_keys_file, 'r') as f:
+        keys = [line.strip() for line in f.readlines()]
+    with open(os.path.join(args.save_dir, args.input_program_file), 'r') as f:
+        data = json.load(f)
+    nsql_dict = process_program_data(data)
+
+    nsql_dict_group = split_data_by_processes(nsql_dict, args.n_processes)s
+    result_dict = execute_programs_multiprocessing(args, dataset, nsql_dict_group, keys)
+    n_correct_samples = evaluate_results(result_dict, args)
+    print(f'Overall Accuracy: {n_correct_samples}/{len(result_dict)}')
+
+    with open(os.path.join(args.save_dir, args.output_program_execution_file), 'w') as f:
+        json.dump(result_dict, f)
