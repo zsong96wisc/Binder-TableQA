@@ -55,7 +55,7 @@ def get_pandas_table(table_id: str, table_title: str) -> str:
 
 
 # Create in-memory database
-engine = create_engine("sqlite://", echo=True)
+engine = create_engine("sqlite://", echo=False)
 
 
 # Base class
