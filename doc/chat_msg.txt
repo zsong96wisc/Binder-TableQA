@@ -1,0 +1,31 @@
+Please generate a Python program given the SQLAlchemy ORM and the Question.
+SQLAlchemy ORM schema with examples of each column content in the comment:
+```
+class Table(Base):
+  __tablename__ = "List_of_television_stations_in_Manitoba"
+
+  City_of_licence: Mapped[str] # e.g., "Brandon", "Minnedosa"
+  Analog_channel: Mapped[Optional[int]] # e.g., 4, 12
+  Digital_channel: Mapped[Optional[int]] # e.g., 13, 51
+  Virtual_channel: Mapped[Optional[float]] # e.g., 13.1, 35.1
+  Callsign: Mapped[str] # e.g., "CKYB-TV", "CHMI-DT"
+  Network: Mapped[str] # e.g., "CTV", "Global"
+  Notes: Mapped[Optional[str]] # e.g., "MTS TV HD ch. 417"
+```
+
+Question:
+Which network has twice as many stations of network 'Global'
+
+The complete python program should contains two steps:
+1. A sequence of SQLAlchemy statement `stmt` that can be input into SQLAlchemy's `session.scalars(stmt)` function;
+2. A function that takes the returns of `session.scalars(stmt)` and return the answer to the question so that it can process each record, which may be difficult to be handled in the first step.
+Here is an example of partial python program of that two steps:
+# step 1
+stmt = select(Table) # Get related columns and necessary processing
+results = session.scalars(stmt)
+
+# step 2
+def get_answer(results):
+  for r in results:
+    pass # Processing one row of results
+get_answer(results)

@@ -1,0 +1,29 @@
+Please generate a Python program given the SQLAlchemy ORM and the Question.
+SQLAlchemy ORM schema with examples of each column content in the comment:
+```
+class Table(Base):
+  __tablename__ = "Athelete_Information"
+
+  born_date: Mapped[str] # e.g., "oct 4, 2017", "nov 23, 2018"
+  name: Mapped[str] # e.g., "Steven Fox", "Scott Cat"
+  country: Mapped[str] # e.g., "Canada", "China"
+  weight: Mapped[Optional[str]] # e.g., "66 kg", "59 kg"
+  height: Mapped[Optional[float]] # e.g., 183.4, 179.2
+```
+
+Question:
+Who is the oldest?
+
+The complete python program should contains two steps:
+1. A sequence of SQLAlchemy statement `stmt` that can be input into SQLAlchemy's `session.scalars(stmt)` function;
+2. A function that takes the returns of `session.scalars(stmt)` and return the answer to the question so it can process each record, which may be difficult to be handled in the first step.
+Here is an example of partial python program of that two steps:
+# step 1
+stmt = select(Table) # Get related columns and necessary processing
+results = session.scalars(stmt)
+
+# step 2
+def get_answer(results):
+  for r in results:
+    pass # Processing one row of results
+get_answer(results)
