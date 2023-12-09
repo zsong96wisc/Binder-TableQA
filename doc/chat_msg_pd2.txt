@@ -1,0 +1,21 @@
+Please generate a Python program given the pandas DataFrame dtype and the Question.
+pandas DataFrame dtype with examples of each column's content seperated by # in the comment:
+```
+>>> df.name = "List of television stations in Manitoba"
+>>> df.dtype
+City_of_licence object # e.g., Brandon#Minnedosa
+Analog_channel  int64 # e.g., 4#12
+Digital_channel int64 # e.g., 13#51
+Virtual_channel float64 # e.g., 13.1#35.1
+Callsign        object # e.g., CKYB-TV#CHMI-DT
+Network         object # e.g., CTV#Global
+Notes           object # e.g., MTS TV HD ch. 417
+dtype: object
+```
+
+Question:
+Which network has twice as many stations of network 'Global'?
+
+The complete python program should contain:
+1. A function that takes the DataFrame `df` and return the answer to the question;
+2. Do some processing to each record so that it can return the answer.
