@@ -10,7 +10,6 @@ def check_statement(df: pd.DataFrame):
 
 
 for df, table, stmt_list, ans_list in dataset_iter():
-    i = 0
     for stmt, ans in zip(stmt_list, ans_list):
         prompt = gen_prompt_pandas(table, stmt, Dataset.TABFACT)
         while True:
@@ -22,7 +21,3 @@ for df, table, stmt_list, ans_list in dataset_iter():
                 break
             except:
                 continue
-
-        i += 1
-        if i == 3:
-            quit()
