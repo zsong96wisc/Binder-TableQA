@@ -1,0 +1,22 @@
+Please generate a Python function given the pandas DataFrame dtype and the Statement.
+Here is the pandas DataFrame's dtype with sampled examples of each column's content in the comment.
+Each example is seperated by #
+```python
+>>> import pandas as pd
+
+[DATA_SCHEMA]
+```
+
+Statement:
+[STATEMENT]
+
+The python function should be like:
+1. A function that takes the DataFrame `df` and return True or False to the Statement;
+2. Do some processing to each record so that it can judge the Statement;
+3. The name of the function should be `check_statement`.
+
+Here is an example of generated function:
+```python
+def check_statement(df):
+    pass # return True of False
+```

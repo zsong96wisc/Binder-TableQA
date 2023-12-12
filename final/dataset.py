@@ -3,6 +3,12 @@ import zipfile, os, pandas
 from typing import Iterator, Optional
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from enum import Enum
+
+
+class Dataset(Enum):
+    TABFACT = 1
+    WIKITQ = 2
 
 
 def download_unzip(name: str, ex_dir: str, url: str) -> None:
@@ -13,7 +19,7 @@ def download_unzip(name: str, ex_dir: str, url: str) -> None:
             zip_file.extractall()
 
 
-def sample_data(col: pandas.Series, sep: str = "|"):
+def sample_data(col: pandas.Series, sep: str = "#"):
     sample_len = min(10, len(col))
     samples = list(col.sample(n=sample_len))
     str_samples = [str(s) for s in samples]
