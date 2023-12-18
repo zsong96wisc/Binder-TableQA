@@ -41,6 +41,9 @@ Uncomment the certain execution section for WikiTQ in `execute_run.py` and run t
 python execute_run.py
 ```
 
+### Modified Version to use Llama2
+We used the GitHub version of [Llama2](https://github.com/facebookresearch/llama) and installed the LLM based on the tutorial [Two Ways to Download and Access Llama 2 Locally](https://towardsdatascience.com/two-ways-to-download-and-access-llama-2-locally-8a432ed232a4). The generator.py is modified to call the Llama2 API instead of ChatGPT-3.5-turbo API. 
+
 ### Schedule
 
 ![](./doc/schedule.png)
