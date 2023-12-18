@@ -8,4 +8,10 @@
 
 3. Run the code
 
-```python main.py```
+- For WikiTQ Dataset
+
+```python wikitq_query.py```
+
+- For TabFact Dataset
+
+```python tabfact_query.py```

@@ -2,7 +2,7 @@ Please generate a Python function given the pandas DataFrame dtype and the Quest
 Here is the pandas DataFrame's dtype with sampled examples of each column's content in the comment.
 Each example is seperated by #
 ```python
-import pandas as pd
+>>> import pandas as pd
 
 [DATA_SCHEMA]
 ```
@@ -13,10 +13,10 @@ Question:
 The python function should be like:
 1. A function that takes the DataFrame `df` and return the answer to the Question;
 2. Do some processing to each record so that it can retrieve the answer;
-3. The name of the function should be `check_statement`.
+3. The name of the function should be `answer_question`.
 
 Here is an example of generated function:
 ```python
-def check_statement(df):
-    pass # return True of False
+def answer_question(df):
+    pass # return the answer
 ```

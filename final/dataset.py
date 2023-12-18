@@ -35,7 +35,7 @@ DTYPE
 
 
 def get_pandas_table(dfcsv: pandas.DataFrame) -> str:
-    table_title = dfcsv.name
+    table_title = dfcsv.table_title_769
     dtypes = dfcsv.dtypes
     print_dtypes = str(dtypes).split("\n")
     str_dtype_list = [
@@ -67,7 +67,7 @@ col_template = "NAME: Mapped[TYPE] = mapped_column('ACTUAL') # e.g., EXPL"
 
 
 def get_sqlalchemy_table(dfcsv: pandas.DataFrame) -> str:
-    table_title = dfcsv.name
+    table_title = dfcsv.table_title_769
     table_schema = sqlalchemy_template.replace("NAME", table_title)
     dtypes = dfcsv.dtypes
     cols = []

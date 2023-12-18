@@ -1,4 +1,4 @@
-import openai
+import openai, time
 
 client = openai.OpenAI()
 
@@ -14,4 +14,6 @@ def call_llm(message: str) -> str:
     if result.choices[0].finish_reason.strip() == "stop":
         return result.choices[0].message.content
     else:
+        print(result)
+        time.sleep(30)
         raise Exception("Error Occurs")

@@ -22,7 +22,7 @@ def get_pandas_schema(table_id: str, table_title: str) -> str:
         header=0,
         na_values=na_values,
     )
-    dfcsv.name = table_title
+    dfcsv.table_title_769 = table_title
     return get_pandas_table(dfcsv)
 
 
@@ -33,7 +33,7 @@ def get_sqlalchemy_schema(table_id: str, table_title: str) -> str:
         header=0,
         na_values=na_values,
     )
-    dfcsv.name = table_title
+    dfcsv.table_title_769 = table_title
     return get_sqlalchemy_table(dfcsv)
 
 
