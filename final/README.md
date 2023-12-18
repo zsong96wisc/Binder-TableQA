@@ -1,3 +1,5 @@
+Please run the code with `python >= 3.12`.
+
 1. Install Dependencies
 
 ```pip install -r requirements.txt```
