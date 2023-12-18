@@ -9,7 +9,11 @@ This repo contains the code and data for the re-implementation of Binder (Bindin
 ## Dataset
 We utilize the WikiTableQuestions dataset from [the breadth of the knowledge source and the depth of logical compositionally](Pasupat et al., 2021) for question-answering tasks. The WikiTableQuestions is created on HTML tables as follows. Tables were randomly selected from Wikipedia if they had a minimum of eight rows and five columns. Two Amazon Mechanical Turk tasks are created to generate question-answer pairs. After the process, around 69% of the initial questions were kept, yielding a dataset with over 22,000 examples on more than 2,100 tables. 20% of these tables and their associated questions were set aside for test- ing and development, while the rest were used for training.
 
-## Code
+## Code - Final Project
+
+Please see folder `final`
+
+## Code - ReImplementation
 ### Setup
 First, create a conda environment from the yaml file and activate it:
 ```bash
